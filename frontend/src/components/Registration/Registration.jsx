@@ -50,7 +50,7 @@ export default function Registration() {
                   Create an account
                 </h1>
                 <p className="font-light font-medium text-[#444444] opacity-90">
-                  Join the global cybersecurity community by becoming a part of HackerPlace today!
+                  Join the e-voting platform today!
                 </p>
               </div>
               <form className="space-y-4 md:space-y-6" onSubmit={submit}>

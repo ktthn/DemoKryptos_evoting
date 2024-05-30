@@ -1,13 +1,10 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Election, Vote, Candidate
 from .serializers import ElectionSerializer, CandidateSerializer, VoteSerializer
-from .paillier import encrypt, decrypt, generate_keypair
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
-import json
 import hashlib
 from phe import paillier
 from .permissions import IsAdminOrReadOnly
@@ -41,13 +38,7 @@ class VoteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            candidate = Candidate.objects.get(id=candidate_id)
-        except Candidate.DoesNotExist:
-            return Response(
-                {"detail": "Candidate not found."}, status=status.HTTP_404_NOT_FOUND
-            )
-
+        candidate = get_object_or_404(Candidate, id=candidate_id)
         election = candidate.election
         if election.status == "closed":
             return Response(
@@ -55,22 +46,19 @@ class VoteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        existing_vote = Vote.objects.filter(
-            voter=request.user, election=election
-        ).first()
-        if existing_vote:
+        if Vote.objects.filter(voter=request.user, election=election).exists():
             return Response(
                 {"detail": "You have already voted in this election."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        public_key_n = int.from_bytes(election.public_key_n, "big")
-        public_key = paillier.PaillierPublicKey(public_key_n)
-
-        encrypted_vote, r = encrypt(public_key, int(candidate_id))
-        encrypted_vote_bytes = encrypted_vote.to_bytes(
-            (encrypted_vote.bit_length() + 7) // 8, "big"
+        # Using the phe library to encrypt the vote
+        public_key = paillier.PaillierPublicKey(n=int.from_bytes(election.public_key_n, 'big'))
+        encrypted_vote = public_key.encrypt(int(candidate_id))
+        encrypted_vote_bytes = encrypted_vote.ciphertext().to_bytes(
+            (encrypted_vote.ciphertext().bit_length() + 7) // 8, 'big'
         )
+
         vote_hash = hashlib.sha256(encrypted_vote_bytes).hexdigest()
 
         vote = Vote(
@@ -94,42 +82,43 @@ class VoteViewSet(viewsets.ModelViewSet):
     def tally_votes(self, request):
         election_id = request.query_params.get("election_id")
         if not election_id:
-            return Response({"error": "election_id is required"}, status=400)
+            return Response({"error": "election_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        votes = Vote.objects.filter(candidate__election_id=election_id)
-        encrypted_votes = [json.loads(vote.encrypted_vote) for vote in votes]
-        encrypted_sum = homomorphic_add(encrypted_votes)
-        decrypted_sum = decrypt_vote(
-            json.dumps(
-                {
-                    "ciphertext": str(encrypted_sum.ciphertext()),
-                    "exponent": encrypted_sum.exponent,
-                }
-            )
+        election = get_object_or_404(Election, id=election_id)
+        votes = Vote.objects.filter(election=election)
+
+        private_key = paillier.PaillierPrivateKey(
+            public_key=paillier.PaillierPublicKey(n=int.from_bytes(election.public_key_n, 'big')),
+            p=int.from_bytes(election.private_key_p, 'big'),
+            q=int.from_bytes(election.private_key_q, 'big')
         )
+        total_votes = sum(private_key.decrypt(
+            paillier.EncryptedNumber(private_key.public_key, int.from_bytes(vote.encrypted_vote, 'big'))) for vote in
+            votes)
 
-        return Response({"total_votes": decrypted_sum})
+        return Response({"total_votes": total_votes})
 
 
 @api_view(["GET"])
 def get_public_key(request):
-    public_key, _ = generate_keypair(512)
-    return Response({"n": str(public_key[0]), "g": str(public_key[1])})
+    public_key, _ = paillier.generate_paillier_keypair(n_length=2048)
+    return Response({"n": str(public_key.n)})
 
+@api_view(['GET'])
+def has_voted(request, election_id):
+    has_voted = Vote.objects.filter(voter=request.user, election_id=election_id).exists()
+    return Response({'hasVoted': has_voted})
 
 class CloseElectionView(APIView):
     def post(self, request, election_id):
         election = get_object_or_404(Election, id=election_id)
-
         election.status = "closed"
         election.save()
 
-        private_key_p = int.from_bytes(election.private_key_p, "big")
-        private_key_q = int.from_bytes(election.private_key_q, "big")
-        public_key_n = int.from_bytes(election.public_key_n, "big")
-        public_key = paillier.PaillierPublicKey(public_key_n)
         private_key = paillier.PaillierPrivateKey(
-            public_key, private_key_p, private_key_q
+            public_key=paillier.PaillierPublicKey(n=int.from_bytes(election.public_key_n, 'big')),
+            p=int.from_bytes(election.private_key_p, 'big'),
+            q=int.from_bytes(election.private_key_q, 'big')
         )
 
         results = {}
@@ -141,7 +130,7 @@ class CloseElectionView(APIView):
             for vote in votes:
                 encrypted_vote_int = int.from_bytes(vote.encrypted_vote, "big")
                 encrypted_vote = paillier.EncryptedNumber(
-                    public_key, encrypted_vote_int
+                    private_key.public_key, encrypted_vote_int
                 )
                 decrypted_vote = private_key.decrypt(encrypted_vote)
                 if decrypted_vote == candidate.id:

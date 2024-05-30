@@ -7,6 +7,7 @@ from .views import (
     CloseElectionView,
     get_public_key,
     ElectionCandidatesView,
+    has_voted,
 )
 
 router = DefaultRouter()
@@ -27,4 +28,6 @@ urlpatterns = [
         name="election-candidates",
     ),
     path("get-public-key/", get_public_key, name="get-public-key"),
+    path('elections/<int:election_id>/has_voted/', has_voted, name='has_voted'),
+
 ]

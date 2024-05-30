@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import AuthContext from '../../context/AutoContext';
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
-import { vote, vote2, vote4, vote5, vote6, vote7, vote8, vote9, vote10, vote11 } from "../../assets/icons";
+import { vote, vote2, vote4, vote5, vote6, vote7, vote8, vote9, vote10 } from "../../assets/icons";
 
 const API_URL = 'http://127.0.0.1:8000';
 
@@ -19,7 +19,7 @@ const ElectionsList = () => {
     return data ? JSON.parse(data) : {};
   });
   const [disabledCloseButtons, setDisabledCloseButtons] = useState({});
-  const electionImages = [vote, vote2, vote4, vote5, vote6, vote7, vote8, vote9, vote10, vote11];
+  const electionImages = [vote, vote2, vote4, vote5, vote6, vote7, vote8, vote9, vote10];
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,13 +108,13 @@ const ElectionsList = () => {
     }
   };
 
-  const clearClosedElectionData = () => {
-    localStorage.removeItem('closedElectionData');
-    setClosedElectionData({});
-  };
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  // const clearClosedElectionData = () => {
+  //   localStorage.removeItem('closedElectionData');
+  //   setClosedElectionData({});
+  // };
+  //
+  // if (loading) return <div>Loading...</div>;
+  // if (error) return <div>Error: {error}</div>;
 
   return (
     <>
@@ -132,12 +132,12 @@ const ElectionsList = () => {
               >
                 Add Election
               </Link>
-              <button
-                onClick={clearClosedElectionData}
-                className="inline-flex items-center px-3 py-2 text-sm mb-4 font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 ml-2"
-              >
-                Clear Closed Election Data
-              </button>
+              {/*<button*/}
+              {/*  onClick={clearClosedElectionData}*/}
+              {/*  className="inline-flex items-center px-3 py-2 text-sm mb-4 font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800 ml-2"*/}
+              {/*>*/}
+              {/*  Clear Closed Election Data*/}
+              {/*</button>*/}
             </>
           )}
         </div>

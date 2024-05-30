@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Election, Candidate, Vote
-from .paillier import generate_keypair
 from phe import paillier
 
 class ElectionSerializer(serializers.ModelSerializer):
@@ -9,7 +8,7 @@ class ElectionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        public_key, private_key = paillier.generate_paillier_keypair(n_length=1024)
+        public_key, private_key = paillier.generate_paillier_keypair(n_length=2048)
         validated_data["public_key_n"] = public_key.n.to_bytes(
             (public_key.n.bit_length() + 7) // 8, "big"
         )

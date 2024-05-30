@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from phe import paillier
 import hashlib
-from .paillier import encrypt
 
 User = settings.AUTH_USER_MODEL
 
@@ -59,11 +58,9 @@ class Vote(models.Model):
             public_key_n = int.from_bytes(election.public_key_n, "big")
             public_key = paillier.PaillierPublicKey(public_key_n)
 
-            print(f"Public key used for encryption: n={public_key_n}")
-
-            encrypted_vote, _ = encrypt(public_key, 1)
-            self.encrypted_vote = encrypted_vote.to_bytes(
-                (encrypted_vote.bit_length() + 7) // 8, "big"
+            encrypted_vote = public_key.encrypt(1)
+            self.encrypted_vote = encrypted_vote.ciphertext().to_bytes(
+                (encrypted_vote.ciphertext().bit_length() + 7) // 8, "big"
             )
             self.hash = hashlib.sha256(self.encrypted_vote).hexdigest()
         super().save(*args, **kwargs)

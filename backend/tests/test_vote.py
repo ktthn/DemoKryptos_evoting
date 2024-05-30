@@ -108,7 +108,8 @@ def test_create_vote_with_invalid_candidate(authenticated_client):
         "/elections/votes/", {"candidate": 999}, format="json"
     )
     assert response.status_code == 404
-    assert response.data.get("detail") == "Candidate not found."
+    # Convert ErrorDetail to string or match against its string attribute
+    assert str(response.data.get("detail")) == "No Candidate matches the given query."
 
 
 @pytest.mark.django_db

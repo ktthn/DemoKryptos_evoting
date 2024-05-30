@@ -3,7 +3,7 @@ import random
 from sympy import gcd
 
 
-def generate_keypair(bits=1024):
+def generate_keypair(bits=2048):
     public_key, private_key = paillier.generate_paillier_keypair(n_length=bits)
     return public_key, private_key
 
@@ -22,3 +22,4 @@ def encrypt(public_key, plaintext):
 def decrypt(private_key, ciphertext):
     plaintext = private_key.decrypt(ciphertext)
     return plaintext
+

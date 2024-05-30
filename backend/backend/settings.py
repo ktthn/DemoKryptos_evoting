@@ -113,12 +113,26 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": 'db',
+        'USERNAME': 'postgres',  # Имя пользователя PostgreSQL
+        'PASSWORD': '',  # Пароль пользователя PostgreSQL
+        'HOST': 'localhost',  # Хост базы данных (обычно localhost)
+        'PORT': '5432',
     }
 }
+
+
+
 
 
 # Password validation
@@ -179,4 +193,3 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]

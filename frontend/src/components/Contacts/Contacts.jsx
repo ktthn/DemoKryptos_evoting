@@ -1,4 +1,4 @@
-
+import logo from "../../assets/icons/img.png";
 export default function Contacts() {
     return(
         <>
@@ -6,7 +6,12 @@ export default function Contacts() {
     <div className="container px-6 py-12 mx-auto">
         <div className="text-center">
             <h1 className="mt-2 text-2xl font-semibold text-gray-800 md:text-3xl">Get in touch</h1>
+
             <div className="h-2 w-44 bg-indigo-500 mb-9 rounded-xl mx-auto"></div>
+            <div className="flex justify-center">
+                <img src={logo} alt="Logo" className="h-40 w-auto mx-auto" />
+            </div>
+
             <p className="mt-3 text-gray-500 ">Our friendly team is always here to chat.</p>
         </div>
 
