@@ -3,12 +3,13 @@ import logging
 from django.contrib.auth import get_user_model
 from tests.constants import ADMIN_USERNAME, ADMIN_PASSWORD
 from elections.models import Election, Candidate, Vote
-from elections.paillier import generate_keypair
-from .logging_api_client import LoggingAPIClient  # Import the custom logging API client
+from phe import paillier
+from .logging_api_client import LoggingAPIClient  # Ensure this is correct
+import unittest
+from django.test import TestCase
 
 User = get_user_model()
 
-# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def authenticated_client(api_client, admin_token):
 
 @pytest.fixture
 def election(db, admin_user):
-    public_key, private_key = generate_keypair(512)
+    public_key, private_key = paillier.generate_paillier_keypair(n_length=2048)
     return Election.objects.create(
         title="Test Election",
         description="Test Description",
@@ -108,7 +109,6 @@ def test_create_vote_with_invalid_candidate(authenticated_client):
         "/elections/votes/", {"candidate": 999}, format="json"
     )
     assert response.status_code == 404
-    # Convert ErrorDetail to string or match against its string attribute
     assert str(response.data.get("detail")) == "No Candidate matches the given query."
 
 

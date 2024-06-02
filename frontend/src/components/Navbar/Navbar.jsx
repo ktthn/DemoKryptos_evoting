@@ -29,7 +29,7 @@ export default function Navbar() {
                 <nav className="fixed top-0 left-0 right-0 bg-white border-gray-200 px-4 lg:px-6 py-2.5 font-['Montserrat'] z-50">
                     <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
                         <Link to="/" className="flex items-center text-xl font-medium">
-                            <img src={logo} alt="Logo" className="h-10 w-auto" />
+                            <img src={logo} alt="Logo"  className="h-10 w-auto" />
 
                             DemoKryptos
                         </Link>
